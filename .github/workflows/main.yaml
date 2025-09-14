@@ -1,0 +1,40 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Image
+        run: docker build -t lucasrsousa21/dotgroup-app-devops:latest .
+
+      - name: Docker Scout Quickview/CVEs
+        uses: docker/scout-action@v1.18.2
+        with: 
+          command: quickview, cves
+          image: lucasrsousa21/dotgroup-app-devops:latest
+
+      - name: Docker Scout Recommendations
+        uses: docker/scout-action@v1.18.2
+        with:
+          command: recommendations
+          image: lucasrsousa21/dotgroup-app-devops:latest
+
+      - name: Docker Scout SARIF Report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: scout.sarif
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}      
+
+      - name: Push Docker image
+        run: docker push lucasrsousa21/dotgroup-app-devops:latest              
