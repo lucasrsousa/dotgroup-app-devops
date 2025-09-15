@@ -24,6 +24,7 @@ jobs:
         with: 
           command: quickview, cves
           image: lucasrsousa21/dotgroup-app-devops:latest
+          sarif-file: 'scout-results.sarif'
           github-token: ${{ secrets.GITHUB_TOKEN }}  
 
       - name: Docker Scout Recommendations
@@ -33,9 +34,9 @@ jobs:
           image: lucasrsousa21/dotgroup-app-devops:latest
 
       - name: Docker Scout SARIF Report
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: scout.sarif
+          sarif_file: scout-results.sarif
 
       - name: Push Docker image
         run: docker push lucasrsousa21/dotgroup-app-devops:latest              
