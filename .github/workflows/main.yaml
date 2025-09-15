@@ -71,7 +71,7 @@ jobs:
       - name: Terraform Init & Apply
         run: |
           terraform -chdir=terraform init
-          terraform -chdir=terraform apply -auto-approve -var "image_tag=${GITHUB_SHA}"
+          terraform -chdir=terraform/app-update apply -auto-approve -var "image_tag=${GITHUB_SHA}"
 
       # Update ECS Service
       - name: Update ECS Service with new image
