@@ -2,6 +2,8 @@
 
 🚀 Este projeto mostra como estruturar uma aplicação PHP containerizada, rodando em ECS Fargate com CI/CD automatizado, infraestrutura declarativa em Terraform e observabilidade completa.
 
+**Observação:** Este projeto foi finalizado utilizando uma pequena API improvisada como base, devido à ausência do link para a aplicação de exemplo.
+
 ---
 
 ## Etapa 1: Containerização da Aplicação
