@@ -68,8 +68,10 @@ jobs:
         run: docker push lucasrsousa21/dotgroup-app-devops:${{ env.IMAGE_TAG }}
 
       # Deploy via Terraform
-      - name: Deploy via Terraform
-        run: terraform -chdir=terraform apply -auto-approve -var "image_tag=${GITHUB_SHA}"
+      - name: Terraform Init & Apply
+        run: |
+          terraform -chdir=terraform init
+          terraform -chdir=terraform apply -auto-approve -var "image_tag=${GITHUB_SHA}"
 
       # Update ECS Service
       - name: Update ECS Service with new image
