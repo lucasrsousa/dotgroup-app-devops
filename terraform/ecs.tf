@@ -21,7 +21,7 @@ resource "aws_ecs_task_definition" "dotgroup-app" {
   container_definitions = jsonencode([
     {
       name      = "dotgroup-app"
-      image     = "lucasrsousa21/dotgroup-app-teste-tecnico:latest"
+      image     = "lucasrsousa21/dotgroup-app-devops:latest"
       essential = true
       portMappings = [
         {
