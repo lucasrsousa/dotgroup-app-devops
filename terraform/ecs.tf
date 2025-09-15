@@ -14,14 +14,6 @@ resource "aws_cloudwatch_log_group" "dotgroup_app" {
 }
 
 ############################################
-# IAM Role - Permissão de Logs
-############################################
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_logs" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-############################################
 # ECS Task Definition
 ############################################
 variable "image_tag" {
@@ -60,15 +52,15 @@ resource "aws_ecs_task_definition" "dotgroup-app" {
           name  = "VARIAVEL_FAKE_2"
           value = "value2"
         }
-      ]
+      ]      
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = aws_cloudwatch_log_group.dotgroup_app.name
-          awslogs-region        = "us-east-1"
-          awslogs-stream-prefix = "ecs"
+          "awslogs-group"         = aws_cloudwatch_log_group.dotgroup_app.name
+          "awslogs-region"        = "us-east-1"
+          "awslogs-stream-prefix" = "ecs"
         }
-      }
+      }      
     }
   ])
 }
