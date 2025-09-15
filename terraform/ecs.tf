@@ -8,6 +8,13 @@ resource "aws_ecs_cluster" "dotgroup-prod" {
 ############################################
 # ECS Task Definition
 ############################################
+
+variable "image_tag" {
+  description = "Tag da imagem Docker"
+  type        = string
+  default     = "latest"
+}
+
 resource "aws_ecs_task_definition" "dotgroup-app" {
   family                   = "dotgroup-app-task"
   network_mode             = "awsvpc"
@@ -21,7 +28,7 @@ resource "aws_ecs_task_definition" "dotgroup-app" {
   container_definitions = jsonencode([
     {
       name      = "dotgroup-app"
-      image     = "lucasrsousa21/dotgroup-app-devops:latest"
+      image     = "lucasrsousa21/dotgroup-app-devops:${var.image_tag}"
       essential = true
       portMappings = [
         {
@@ -61,4 +68,35 @@ resource "aws_ecs_service" "dotgroup-app" {
   depends_on = [
     aws_lb_listener.app
   ]
+}
+
+############################################
+# Auto Scaling Target
+############################################
+resource "aws_appautoscaling_target" "ecs_dotgroup_target" {
+  max_capacity       = 2
+  min_capacity       = 1
+  resource_id        = "service/${aws_ecs_cluster.dotgroup-prod.name}/${aws_ecs_service.dotgroup-app.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+############################################
+# Auto Scaling Policy - CPU
+############################################
+resource "aws_appautoscaling_policy" "ecs_dotgroup_cpu_scale_up" {
+  name               = "cpu-scale-up"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_dotgroup_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_dotgroup_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_dotgroup_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = 70.0       # % de CPU
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    scale_in_cooldown  = 240
+    scale_out_cooldown = 240
+  }
 }

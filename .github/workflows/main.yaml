@@ -6,40 +6,75 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+
     steps:
+
+      # Checkout do repositório
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Faz login no Docker Hub utilizando secrets
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}              
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
+      # Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0            
+      
+      # Gera uma HASH para tag da imagem
+      - name: Set Docker Image Tag
+        run: echo "IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV                    
+      
+      # Criação da imagem do Docker a partir do Dockerfile
       - name: Build Image
-        run: docker build -t lucasrsousa21/dotgroup-app-devops:latest .
+        run: docker build -t lucasrsousa21/dotgroup-app-devops:${{ env.IMAGE_TAG }} .
 
+      # Scan de vulnerabilidades utilizando Docker Scout (Quickview + CVEs)
       - name: Docker Scout Quickview/CVEs
         uses: docker/scout-action@v1.18.2
         with: 
           command: quickview, cves
-          image: lucasrsousa21/dotgroup-app-devops:latest
+          image: lucasrsousa21/dotgroup-app-devops:${{ env.IMAGE_TAG }}
           format: sarif
           sarif-file: 'scout-results.sarif'
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          only-severities: critical,high
+          only-severities: critical,high # Check apenas por Críticos ou Altas
 
+      # Recomendações do Docker Scout
       - name: Docker Scout Recommendations
         uses: docker/scout-action@v1.18.2
         with:
           command: recommendations
-          image: lucasrsousa21/dotgroup-app-devops:latest
+          image: lucasrsousa21/dotgroup-app-devops:${{ env.IMAGE_TAG }}
 
+      # Upload do relatório para o GitHub Security
       - name: Docker Scout SARIF Report
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: scout-results.sarif
           token: ${{ secrets.GITHUB_TOKEN }}  
 
+      # Push da imagem para o Docker Hub
       - name: Push Docker image
-        run: docker push lucasrsousa21/dotgroup-app-devops:latest              
+        run: docker push lucasrsousa21/dotgroup-app-devops:${{ env.IMAGE_TAG }}
+
+      # Deploy via Terraform
+      - name: Deploy via Terraform
+        run: terraform apply -auto-approve -var "image_tag=${GITHUB_SHA}"
+
+      # Update ECS Service
+      - name: Update ECS Service with new image
+        run: |
+          aws ecs update-service \
+            --cluster dotgroup-prod-cluster \
+            --service dotgroup-app-service \
+            --force-new-deployment
