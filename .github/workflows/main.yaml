@@ -76,7 +76,14 @@ jobs:
       # Update ECS Service
       - name: Update ECS Service with new image
         run: |
+          # Obter a revisão mais recente após o Terraform
+          LATEST_REVISION=$(aws ecs describe-task-definition \
+            --task-definition dotgroup-app-task \
+            --query 'taskDefinition.revision' \
+            --output text)
+          
           aws ecs update-service \
             --cluster dotgroup-prod-cluster \
             --service dotgroup-app-service \
+            --task-definition dotgroup-app-task:$LATEST_REVISION \
             --force-new-deployment
