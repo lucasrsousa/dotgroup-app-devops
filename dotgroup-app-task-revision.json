@@ -1,0 +1,71 @@
+{
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "containerDefinitions": [
+        {
+            "cpu": 0,
+            "environment": [
+                {
+                    "name": "VARIAVEL_FAKE_1",
+                    "value": "value1"
+                },
+                {
+                    "name": "VARIAVEL_FAKE_2",
+                    "value": "value2"
+                }
+            ],
+            "essential": true,
+            "image": "lucasrsousa21/dotgroup-app-devops:072a434",
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                "awslogs-group": "/ecs/dotgroup_app",
+                "awslogs-create-group": "true",
+                "awslogs-region": "us-east-1",
+                "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "mountPoints": [],
+            "name": "dotgroup-app",
+            "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp"
+                }
+            ],
+            "systemControls": [],
+            "volumesFrom": []
+        }
+    ],
+    "cpu": "256",
+    "executionRoleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/ecsTaskExecutionRoleByTf",
+    "family": "dotgroup-app-task",
+    "memory": "512",
+    "networkMode": "awsvpc",
+    "placementConstraints": [],
+    "registeredAt": "2025-09-15T04:48:40.429Z",
+    "registeredBy": "arn:aws:iam::<AWS_ACCOUNT_ID>:user/user-dotgroup-teste",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "revision": 1,
+    "status": "ACTIVE",
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:<AWS_ACCOUNT_ID>:task-definition/dotgroup-app-task:1",
+    "taskRoleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/ecsTaskRole",
+    "volumes": [],
+    "tags": []
+}

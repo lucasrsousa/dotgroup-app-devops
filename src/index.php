@@ -16,8 +16,8 @@ $log = new Logger('app');
 $log->pushHandler(new StreamHandler(__DIR__ . '/../logs/app.log', Logger::DEBUG));
 
 // SQLite init
-$dbFile = __DIR__ . '/../database/database.sqlite';
-$db = new PDO('sqlite:' . __DIR__ . '/../data/db.sqlite');
+$dbFile = __DIR__ . '/../data/db.sqlite';
+$db = new PDO('sqlite:' . $dbFile);
 
 // Sempre cria a tabela se não existir
 $db->exec("CREATE TABLE IF NOT EXISTS tasks (
@@ -32,8 +32,12 @@ if ($count == 0) {
     $db->exec("INSERT INTO tasks (title, done) VALUES ('Primeira task', 0)");
 }
 
-
 // Rotas
+$app->get('/', function (Request $request, Response $response) {
+    $response->getBody()->write(json_encode(['message' => 'API rodando!']));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
 $app->get('/health', function (Request $request, Response $response) {
     $response->getBody()->write(json_encode(['status' => 'ok']));
     return $response->withHeader('Content-Type', 'application/json');
@@ -48,11 +52,24 @@ $app->get('/tasks', function (Request $request, Response $response) use ($db) {
 
 $app->post('/tasks', function (Request $request, Response $response) use ($db, $log) {
     $data = json_decode($request->getBody()->getContents(), true);
+    
+    if (!isset($data['title']) || empty(trim($data['title']))) {
+        $response->getBody()->write(json_encode(['error' => 'O campo title é obrigatório']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+    }
+
     $stmt = $db->prepare("INSERT INTO tasks (title, done) VALUES (:title, 0)");
     $stmt->execute([':title' => $data['title']]);
     $log->info("Nova task criada: " . $data['title']);
+
     $response->getBody()->write(json_encode(['message' => 'Task criada']));
     return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+});
+
+// Rota catch-all para rotas não encontradas
+$app->any('/{routes:.+}', function (Request $request, Response $response) {
+    $response->getBody()->write(json_encode(['error' => 'Rota não encontrada']));
+    return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
 });
 
 $app->run();
